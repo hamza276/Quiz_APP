@@ -111,12 +111,10 @@ def restart_quiz():
     st.session_state.show_explanation = False
     st.session_state.time_up = False
     st.session_state.start_time = None
-    st.experimental_rerun()
 
 def start_quiz():
     st.session_state.current_question_index = 0
     st.session_state.start_time = time.time()
-    st.experimental_rerun()
 
 def submit_answer():
     idx = st.session_state.current_question_index
@@ -126,13 +124,11 @@ def submit_answer():
         if question["options"][selected]["correct"]:
             st.session_state.score += 1
         st.session_state.show_explanation = True
-        st.experimental_rerun()
 
 def next_question():
     st.session_state.current_question_index += 1
     st.session_state.selected_option = None
     st.session_state.show_explanation = False
-    st.experimental_rerun()
 
 # -------------------------
 # App Layout & Logic
@@ -155,7 +151,7 @@ if st.session_state.current_question_index is None:
         start_quiz()
     st.stop()
 
-# Display the computed timer (updates on user interactions)
+# Display the computed timer (it updates on user interactions)
 st.markdown(f"### Time Remaining: {minutes}:{seconds:02d}")
 
 # End quiz if all questions have been answered.
@@ -176,14 +172,13 @@ for i, option in enumerate(current_question["options"]):
     disabled = st.session_state.show_explanation
     if st.button(option["text"], key=f"option_{i}", disabled=disabled):
         st.session_state.selected_option = i
-        st.experimental_rerun()
 
 # Show "Submit Answer" button if an option is selected.
 if st.session_state.selected_option is not None and not st.session_state.show_explanation:
     if st.button("Submit Answer"):
         submit_answer()
 
-# If an answer was submitted, display the explanation and feedback.
+# If an answer was submitted, display feedback and explanation.
 if st.session_state.show_explanation:
     selected = st.session_state.selected_option
     if selected is not None:
