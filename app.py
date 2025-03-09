@@ -1,11 +1,9 @@
 import streamlit as st
 import time
-from streamlit_autorefresh import st_autorefresh
 
-# Auto-refresh the app every second to update the timer.
-st_autorefresh(interval=1000, key="quiz_autorefresh")
-
-# Quiz data
+# -------------------------
+# Quiz Data Configuration
+# -------------------------
 quiz_data = [
     {
         "question": "What is the purpose of Supplementary Certificates in relation to the Permit to Work?",
@@ -69,10 +67,12 @@ quiz_data = [
     }
 ]
 
-# Quiz duration in seconds (10 minutes)
+# Total quiz duration (10 minutes = 600 seconds)
 QUIZ_DURATION = 600
 
-# Initialize session state variables
+# -------------------------
+# Session State Initialization
+# -------------------------
 if "current_question_index" not in st.session_state:
     st.session_state.current_question_index = None
 if "score" not in st.session_state:
@@ -86,7 +86,9 @@ if "time_up" not in st.session_state:
 if "start_time" not in st.session_state:
     st.session_state.start_time = None
 
-# Function to calculate remaining time
+# -------------------------
+# Helper Functions
+# -------------------------
 def get_remaining_time():
     if st.session_state.start_time is None:
         return QUIZ_DURATION
@@ -98,11 +100,10 @@ remaining_time = get_remaining_time()
 minutes = remaining_time // 60
 seconds = remaining_time % 60
 
-# If time has run out and the quiz has started, mark it as time up.
+# Mark quiz as time-up if duration is over and the quiz has started.
 if remaining_time <= 0 and st.session_state.current_question_index is not None:
     st.session_state.time_up = True
 
-# Function to restart the quiz
 def restart_quiz():
     st.session_state.current_question_index = None
     st.session_state.score = 0
@@ -112,13 +113,11 @@ def restart_quiz():
     st.session_state.start_time = None
     st.experimental_rerun()
 
-# Function to start the quiz
 def start_quiz():
     st.session_state.current_question_index = 0
     st.session_state.start_time = time.time()
     st.experimental_rerun()
 
-# Function to submit an answer
 def submit_answer():
     idx = st.session_state.current_question_index
     selected = st.session_state.selected_option
@@ -129,16 +128,18 @@ def submit_answer():
         st.session_state.show_explanation = True
         st.experimental_rerun()
 
-# Function to move to the next question
 def next_question():
     st.session_state.current_question_index += 1
     st.session_state.selected_option = None
     st.session_state.show_explanation = False
     st.experimental_rerun()
 
+# -------------------------
+# App Layout & Logic
+# -------------------------
 st.title("Quiz App")
 
-# If time is up, show final score and option to restart.
+# Show final score if time is up.
 if st.session_state.time_up:
     st.subheader("Time's up! Quiz Completed")
     st.write(f"You scored {st.session_state.score} out of {len(quiz_data)}.")
@@ -146,7 +147,7 @@ if st.session_state.time_up:
         restart_quiz()
     st.stop()
 
-# If quiz hasn't started, show welcome screen.
+# Welcome screen before quiz starts.
 if st.session_state.current_question_index is None:
     st.subheader("Welcome to the Quiz")
     st.write("You have 10 minutes to complete the quiz.")
@@ -154,10 +155,10 @@ if st.session_state.current_question_index is None:
         start_quiz()
     st.stop()
 
-# Display the timer
+# Display the computed timer (updates on user interactions)
 st.markdown(f"### Time Remaining: {minutes}:{seconds:02d}")
 
-# If all questions have been answered, show final score.
+# End quiz if all questions have been answered.
 if st.session_state.current_question_index >= len(quiz_data):
     st.subheader("Quiz Completed")
     st.write(f"You scored {st.session_state.score} out of {len(quiz_data)}.")
@@ -165,27 +166,24 @@ if st.session_state.current_question_index >= len(quiz_data):
         restart_quiz()
     st.stop()
 
-# Display current question
+# Display the current question.
 current_question = quiz_data[st.session_state.current_question_index]
 st.markdown(f"#### Question {st.session_state.current_question_index + 1}: {current_question['question']}")
 
-# List the answer options as buttons.
+# Render answer options as buttons.
 for i, option in enumerate(current_question["options"]):
-    # Disable the buttons if the answer has been submitted.
-    if st.session_state.show_explanation:
-        disabled = True
-    else:
-        disabled = False
+    # Disable option buttons if an answer has been submitted.
+    disabled = st.session_state.show_explanation
     if st.button(option["text"], key=f"option_{i}", disabled=disabled):
         st.session_state.selected_option = i
         st.experimental_rerun()
 
-# If an option is selected and the answer hasn’t been submitted, show a "Submit Answer" button.
+# Show "Submit Answer" button if an option is selected.
 if st.session_state.selected_option is not None and not st.session_state.show_explanation:
     if st.button("Submit Answer"):
         submit_answer()
 
-# If answer has been submitted, display whether it was correct along with the explanation.
+# If an answer was submitted, display the explanation and feedback.
 if st.session_state.show_explanation:
     selected = st.session_state.selected_option
     if selected is not None:
